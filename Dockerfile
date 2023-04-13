@@ -6,17 +6,17 @@ WORKDIR /opt/application
 # 将当前目录（dockerfile所在目录）下所有文件都拷贝到工作目录下（.dockerignore中文件除外）
 COPY . .
 
-RUN gradle clean jar
+RUN gradle clean build
 
 # 采用抖音云基础镜像, 包含https证书, bash, tzdata等常用命令
 FROM public-cn-beijing.cr.volces.com/public/dycloud-openjdk:8-jdk-slim
 WORKDIR /opt/application
 
-# 分析打包文件, maven: pom.xml 可得
+# 将产物copy到运行镜像中
 COPY --from=builder /opt/application/build/libs /opt/application
 
 # 写入run.sh
-RUN echo -e '#!/usr/bin/env bash\ncd /opt/application/ && java -jar $(ls | grep .jar -m 1) ' > /opt/application/run.sh
+RUN echo '#!/usr/bin/env bash\ncd /opt/application/ && java -jar $(ls | sort -r | grep .jar -m 1) ' > /opt/application/run.sh
 
 # 指定run.sh权限
 Run chmod a+x run.sh
